@@ -3,7 +3,6 @@ import scrapy
 from ..items import NewsItem
 
 from pymongo import MongoClient
-import pdb
 
 client = MongoClient('localhost',27017)
 db = client.OFFICIAL_DATABASE

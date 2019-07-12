@@ -1,7 +1,7 @@
 import scrapy
 from scrapy.crawler import CrawlerProcess
 
-from .express import KhmerLoadSpider
+from .khmerload import KhmerLoadSpider
 from .norkhothom import NorKhoThomSpider
 from .todaysharing import TodaysharingSpider
 from .dapnews import DapnewsSpider
