@@ -16,7 +16,6 @@ class PopularSpider(scrapy.Spider):
     def parse(self, response):
         categories = response.xpath('//ul[@id="menu-top-menu"]/li/a')
         for category in categories:
-            linkTitle = category.xpath('/text()').get()
             linkDest = response.urljoin(category.xpath('./@href').get())
             yield scrapy.Request(url=linkDest,callback=self.parse_category)
     def parse_category(self,response):
@@ -26,7 +25,7 @@ class PopularSpider(scrapy.Spider):
             yield scrapy.Request(url=linkUrl,callback=self.parse_content)
     def parse_content(self,response):
         exist_url = False
-        for x in col.find({"url":response.url}):
+        for x in col.find_one({"url":response.url}):
             exist_url = True
             break
         if exist_url == False:

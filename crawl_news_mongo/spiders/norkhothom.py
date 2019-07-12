@@ -6,10 +6,10 @@ from pymongo import MongoClient
 
 client = MongoClient('localhost',27017)
 db = client.OFFICIAL_DATABASE
-col = db['post_news']
+col = db['Norkhothom']
 
-class NorKhoThomSpider(scrapy.Spider):
-    name = "norkhothom"
+class NorkhothomSpider(scrapy.Spider):
+    name = "Norkhothom"
 
     def start_requests(self):
         yield scrapy.Request('https://norkorthom.com/',self.parse)

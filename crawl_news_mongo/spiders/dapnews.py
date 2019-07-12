@@ -6,7 +6,7 @@ import pdb
 
 client = MongoClient('localhost',27017)
 db = client.OFFICIAL_DATABASE
-col = db['post_news']
+col = db['dap_news']
 
 
 class DapnewsSpider(scrapy.Spider):
@@ -31,7 +31,7 @@ class DapnewsSpider(scrapy.Spider):
 
     def parse_content(self,response):
         exist_url = False
-        for x in col.find({"magazine":"DapNews","url":response.url}):
+        for x in col.find({"url":response.url}):
             exist_url = True
             break
         if exist_url == False:
