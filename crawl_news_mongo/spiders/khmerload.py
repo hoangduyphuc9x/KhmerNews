@@ -75,7 +75,7 @@ class KhmerLoadSpider(scrapy.Spider):
         newsItem['date'] = date
         newsItem['category'] = category
         newsItem['url'] = response.url
-        newsItem['content'] = response.xpath('//div[@class="article-content"]').get()
+        # newsItem['content'] = response.xpath('//div[@class="article-content"]').get()
 
         col.insert_one(newsItem)
 

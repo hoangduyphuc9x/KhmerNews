@@ -44,7 +44,7 @@ class NorkhothomSpider(scrapy.Spider):
             norItem['date'] = date
             norItem['category'] = category
             norItem['url'] = response.url
-            norItem['content'] = response.xpath('//div[@class="td-post-content"]').get()
+            # norItem['content'] = response.xpath('//div[@class="td-post-content"]').get()
 
             col.insert_one(norItem)
 

@@ -1,20 +1,6 @@
-let mongoose = require('mongoose');
+var app = require('./app');
+var port = process.env.PORT || 3000;
 
-const server = 'localhost:27017'
-const database = 'OFFICIAL_DATABASE'
-
-class Database{
-    constructor(){
-        this._connect();
-    }
-    _connect(){
-        mongoose.connect(`mongodb://${server}/${database}`)
-        .then(()=>{
-            console.log('Database connection successful');
-        })
-        .catch(err=>{
-            console.log("Connection error")
-        })
-    }
-}
-module.exports = new Database()
+var server = app.listen(port,()=>{
+  console.log('server is listening on port ' + port);
+})

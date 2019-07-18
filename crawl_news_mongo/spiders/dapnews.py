@@ -6,22 +6,37 @@ import pdb
 
 client = MongoClient('localhost',27017)
 db = client.OFFICIAL_DATABASE
-col = db['dap_news']
+col = db['Dap_news']
 
 
-class DapnewsSpider(scrapy.Spider):
+class DapNewsSpider(scrapy.Spider):
     name = 'dapnews'
+
+    list_categories = [
+        'https://www.dap-news.com/latest-news',
+        'https://www.dap-news.com/archives/category/national',
+        'https://www.dap-news.com/archives/category/national/politic',
+        'https://www.dap-news.com/archives/category/national/society',
+        'https://www.dap-news.com/archives/category/international',
+        'https://www.dap-news.com/archives/category/realestate',
+        'https://www.dap-news.com/archives/category/biography',
+        'https://www.dap-news.com/archives/category/sports',
+        'https://www.dap-news.com/archives/category/entertainment',
+        'https://www.dap-news.com/archives/category/health'
+    ]
     
     def start_requests(self):
-        yield scrapy.Request('https://www.dap-news.com/',self.parse)
+        for category in self.list_categories:
+            yield scrapy.Request(category,self.parse_category)
 
-    def parse(self, response):
-        categories = response.xpath('//ul[@id="menu-main-menu"]//li/a/@href')
-        del categories[-1]
+    # def parse(self, response):
+    #     categories = response.xpath('//ul[@id="menu-main-menu"]//li/a/@href')
+    #     del categories[-1]
 
-        for category in categories:
-            linkCategory = response.urljoin(category.get())
-            yield scrapy.Request(url=linkCategory,callback=self.parse_category)
+    #     for category in categories:
+    #         linkCategory = response.urljoin(category.get())
+    #         yield scrapy.Request(url=linkCategory,callback=self.parse_category)
+
     def parse_category(self,response):
         titles = response.xpath('//div[@id="archive-list-wrap"]/ul/li/a/@href')
         for title in titles:
@@ -44,7 +59,7 @@ class DapnewsSpider(scrapy.Spider):
             post_feat_img = ""
             if(article.xpath('./div[@id="post-feat-img"]') is not None):
                 post_feat_img = article.xpath('./div[@id="post-feat-img"]').get()
-            content = article.xpath('./div[@id="content-area"]').get() + post_feat_img
+            # content = article.xpath('./div[@id="content-area"]').get() + post_feat_img
 
             dapsItem = NewsItem()
 
@@ -53,8 +68,8 @@ class DapnewsSpider(scrapy.Spider):
             dapsItem['date'] = date
             dapsItem['category'] = category
             dapsItem['url'] = response.url
-            dapsItem['content'] = content
-            
+            # dapsItem['content'] = content
+
             col.insert_one(dapsItem)
             yield dapsItem
 

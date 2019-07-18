@@ -6,18 +6,32 @@ import pdb
 
 client = MongoClient('localhost',27017)
 db = client.OFFICIAL_DATABASE
-col = db['post_news']
+col = db['Popular']
 
 class PopularSpider(scrapy.Spider):
     name = "popular"
 
+    list_categories = [
+        'https://www.popular.com.kh/category/entertainment/',
+        'https://www.popular.com.kh/category/lifejob/',
+        'https://www.popular.com.kh/category/love/',
+        'https://www.popular.com.kh/category/social/',
+        'https://www.popular.com.kh/category/tours/',
+        'https://www.popular.com.kh/category/sport/',
+        'https://www.popular.com.kh/category/technology/',
+        'https://www.popular.com.kh/category/traffic-today/',
+        'https://www.popular.com.kh/category/pop-feed/',
+        'https://www.popular.com.kh/category/bii2019/'
+    ]
+
     def start_requests(self):
-        yield scrapy.Request('https://www.popular.com.kh/',self.parse)
-    def parse(self, response):
-        categories = response.xpath('//ul[@id="menu-top-menu"]/li/a')
-        for category in categories:
-            linkDest = response.urljoin(category.xpath('./@href').get())
-            yield scrapy.Request(url=linkDest,callback=self.parse_category)
+        for category in self.list_categories:
+            yield scrapy.Request(category,self.parse_category)
+    # def parse(self, response):
+    #     categories = response.xpath('//ul[@id="menu-top-menu"]/li/a')
+    #     for category in categories:
+    #         linkDest = response.urljoin(category.xpath('./@href').get())
+    #         yield scrapy.Request(url=linkDest,callback=self.parse_category)
     def parse_category(self,response):
         urls = response.xpath('//ul[@class="mvp-blog-story-list left relative infinite-content"]/li/a/@href')
         for url in urls:
@@ -25,7 +39,7 @@ class PopularSpider(scrapy.Spider):
             yield scrapy.Request(url=linkUrl,callback=self.parse_content)
     def parse_content(self,response):
         exist_url = False
-        for x in col.find_one({"url":response.url}):
+        for x in col.find({"url":response.url}).limit(1):
             exist_url = True
             break
         if exist_url == False:
@@ -59,8 +73,8 @@ class PopularSpider(scrapy.Spider):
             popularItem['date'] = date
             popularItem['category'] = category
             popularItem['url'] = response.url
-            popularItem['content'] = response.xpath('//div[@id="mvp-content-main"]').get()
+            # popularItem['content'] = response.xpath('//div[@id="mvp-content-main"]').get()
 
             col.insert_one(popularItem)
-            
+
             yield popularItem

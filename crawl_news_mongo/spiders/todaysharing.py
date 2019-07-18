@@ -21,7 +21,7 @@ class TodaySharingSpider(scrapy.Spider):
         'http://news.todaysharing.com/categoryclear/lifestyle/',
         'http://news.todaysharing.com/category/news/'
     ]
-    
+
     def start_requests(self):
         for category in self.list_category:
             for i in range (1,9):
@@ -41,7 +41,7 @@ class TodaySharingSpider(scrapy.Spider):
 
         title = response.xpath('//article//h1/span/text()').get()
         date = response.xpath('//article//time/b/text()').get()
-        content = response.xpath('//article/div[@class="entry-content clearfix single-post-content"]').get()
+        # content = response.xpath('//article/div[@class="entry-content clearfix single-post-content"]').get()
         category = response.xpath('//ul[@class="bf-breadcrumb-items"]/li[2]/a/span/text()').get()
 
         todaySharingItem = NewsItem()
@@ -50,7 +50,7 @@ class TodaySharingSpider(scrapy.Spider):
         todaySharingItem['title'] = title
         todaySharingItem['date'] = date
         todaySharingItem['url'] = response.url
-        todaySharingItem['content'] = content
+        # todaySharingItem['content'] = content
         todaySharingItem['category'] = category
 
         col.insert_one(todaySharingItem)
