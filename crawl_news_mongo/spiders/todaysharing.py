@@ -6,7 +6,8 @@ from pymongo import MongoClient
 
 client = MongoClient('localhost',27017)
 db = client.OFFICIAL_DATABASE
-col = db['TodaySharing']
+# col = db['TodaySharing']
+col = db['posts']
 
 class TodaySharingSpider(scrapy.Spider):
     name = 'todaysharing'

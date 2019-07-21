@@ -6,8 +6,8 @@ import pdb
 
 client = MongoClient('localhost',27017)
 db = client.OFFICIAL_DATABASE
-col = db['Dap_news']
-
+# col = db['Dap_news']
+col = db['posts']
 
 class DapNewsSpider(scrapy.Spider):
     name = 'dapnews'

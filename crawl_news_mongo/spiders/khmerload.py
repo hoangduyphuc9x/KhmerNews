@@ -7,7 +7,9 @@ from pymongo import MongoClient
 
 client = MongoClient('localhost',27017)
 db = client.OFFICIAL_DATABASE
-col = db['Khmerload']
+# col = db['Khmerload']
+col = db['posts']
+
 
 class KhmerLoadSpider(scrapy.Spider):
 
