@@ -2,14 +2,20 @@
 import scrapy
 from scrapy.crawler import CrawlerProcess
 from ..items import NewsItem
+from ..common import categoryProcess,convert_month_to_int,DebugMode
+
+from datetime import datetime
 
 from pymongo import MongoClient
 
 client = MongoClient('localhost',27017)
-db = client.OFFICIAL_DATABASE
-# col = db['Khmerload']
-col = db['posts']
 
+if DebugMode() == True:
+    db = client.TEST_DATABASE
+    col = db["Khmerload"]
+else:
+    db = client.OFFICIAL_DATABASE
+    col = db["posts"]
 
 class KhmerLoadSpider(scrapy.Spider):
 
@@ -27,7 +33,6 @@ class KhmerLoadSpider(scrapy.Spider):
     def parse_category(self,response):
 
         # homepage = response.xpath('//div[@class="homepage-zone-1"]')
-
         # main_title_news = response.xpath('//div[class="homepage-zone-4"]')
 
         list_pages = response.xpath('//ul[@class="pagination"]/li[position()<10]/a/@href').getall()
@@ -49,32 +54,28 @@ class KhmerLoadSpider(scrapy.Spider):
 
     def parse_content(self,response):
         title = response.xpath('//div[@class="article-header"]/h1//text()').get()
-        date = response.xpath('((//div[@class="article-header-meta"]/div)[2]/text())[4]').get().replace("\t","")
-        category = response.xpath('//li[@class="active"]/a/text()').get().replace("\n","").replace(" ","")
+        date_and_time = response.xpath('((//div[@class="article-header-meta"]/div)[2]/text())[4]').get().replace("\n","").strip()
 
-        if category == "តារា&កម្សាន្ដ":
-            category = "Star & Entertainment"
-        elif category == "សង្គម":
-            category = "Social"
-        elif category == "កីទ្បា":
-            category = "Sport"
-        elif category == "ប្លែកៗ":
-            category = "Odd"
-        elif category == "សម្រស់&សុខភាព":
-            category = "Beautiful & Health"
-        elif category == "យល់ដឹង":
-            category = "Knowledge"
-        elif category == "បច្ចេកវិទ្យា":
-            category = "Technology"
-        elif category == "ប្រលោមលោក&អប់រំ":
-            category = "Novel & Education"
+        #parse thoi gian
+        year = int(date_and_time.split()[5])
+        month = convert_month_to_int(date_and_time.split()[3])
+        day = int(date_and_time.split()[4].replace(",",""))
+
+        time = date_and_time.split()[2]
+
+        hour = int(time.split(":")[0])
+        minute = int(time.split(":")[1])
+
+        date_in_date_format = datetime(year,month,day,hour,minute)
+
+        #category tieng Anh
+        category = categoryProcess(response.xpath('//li[@class="active"]/a/text()').get().replace("\n","").replace(" ","").strip())
 
         newsItem = NewsItem()
 
-        # newsItem['_id'] = 1
         newsItem['magazine'] = "Khmerload"
         newsItem['title'] = title
-        newsItem['date'] = date
+        newsItem['date'] = date_in_date_format
         newsItem['category'] = category
         newsItem['url'] = response.url
         # newsItem['content'] = response.xpath('//div[@class="article-content"]').get()

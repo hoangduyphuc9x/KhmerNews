@@ -1,12 +1,19 @@
 import scrapy
 from ..items import NewsItem
+from datetime import datetime
 
 from pymongo import MongoClient
-import pdb
+
+from ..common import categoryProcess,convert_month_to_int,DebugMode
 
 client = MongoClient('localhost',27017)
-db = client.OFFICIAL_DATABASE
-col = db['Popular']
+
+if DebugMode() == True:
+    db = client.TEST_DATABASE
+    col = db["Popular"]
+else:
+    db = client.OFFICIAL_DATABASE
+    col = db["posts"]
 
 class PopularSpider(scrapy.Spider):
     name = "popular"
@@ -27,54 +34,43 @@ class PopularSpider(scrapy.Spider):
     def start_requests(self):
         for category in self.list_categories:
             yield scrapy.Request(category,self.parse_category)
-    # def parse(self, response):
-    #     categories = response.xpath('//ul[@id="menu-top-menu"]/li/a')
-    #     for category in categories:
-    #         linkDest = response.urljoin(category.xpath('./@href').get())
-    #         yield scrapy.Request(url=linkDest,callback=self.parse_category)
+
     def parse_category(self,response):
-        urls = response.xpath('//ul[@class="mvp-blog-story-list left relative infinite-content"]/li/a/@href')
+        urls = response.xpath('//ul[@class="mvp-blog-story-list left relative infinite-content"]/li/a/@href').getall()
         for url in urls:
-            linkUrl = response.urljoin(url.get())
-            yield scrapy.Request(url=linkUrl,callback=self.parse_content)
+            exist_url = False
+            for x in col.find({"url":url}).limit(1):
+                exist_url = True
+                break
+            if exist_url == False:
+                linkUrl = response.urljoin(url)
+                yield scrapy.Request(url=linkUrl,callback=self.parse_content)
+
     def parse_content(self,response):
-        exist_url = False
-        for x in col.find({"url":response.url}).limit(1):
-            exist_url = True
-            break
-        if exist_url == False:
-            title = response.xpath('//header[@id="mvp-post-head"]/h1/text()').get()
-            if title is None:
-                print("NONE!!!!!")
-            category = response.xpath('//header[@id="mvp-post-head"]/h3[@class="mvp-post-cat left relative"]/a/span/text()').get()
-            if category == "កម្សាន្ត":
-                category = "Entertainment"
-            elif category == "ជីវិត & ការងារ":
-                category = "Life Job"
-            elif category == "ស្នេហាស្នេហ៍ហឺត":
-                category = "Love"
-            elif category == "សង្គម":
-                category = "Social"
-            elif category == "ទេសចរណ៍":
-                category = "Tours"
-            elif category == "កីឡា":
-                category = "Sport"
-            elif category == "បច្ចេកវិទ្យា":
-                category = "Technology"
-            elif category == "ចរាចរណ៍ថ្ងៃនេះ":
-                category = "Traffic Today"
+        title = response.xpath('//header[@id="mvp-post-head"]/h1/text()').get()
+        if title is None:
+            print("NONE!!!!!")
+        category = categoryProcess(response.xpath('//header[@id="mvp-post-head"]/h3[@class="mvp-post-cat left relative"]/a/span/text()').get().strip())
 
-            date = response.xpath('//time[@class="post-date updated"]/text()').get()
+        date = response.xpath('//time[@class="post-date updated"]/text()').get()
 
-            popularItem = NewsItem()
+        year = int(date.split()[2])
+        month = convert_month_to_int(date.split()[0])
+        day = int(date.split()[1].replace(",",""))
 
-            popularItem['magazine'] = "Popular"
-            popularItem['title'] = title
-            popularItem['date'] = date
-            popularItem['category'] = category
-            popularItem['url'] = response.url
-            # popularItem['content'] = response.xpath('//div[@id="mvp-content-main"]').get()
+        date_in_iso_format = datetime(year,month,day)
 
-            col.insert_one(popularItem)
+        popularItem = NewsItem()
 
-            yield popularItem
+        popularItem['magazine'] = "Popular"
+        popularItem['title'] = title
+        popularItem['date'] = date_in_iso_format
+        popularItem['category'] = category
+        popularItem['url'] = response.url
+        # popularItem['content'] = response.xpath('//div[@id="mvp-content-main"]').get()
+
+        col.insert_one(popularItem)
+
+        # col.find_one_and_update({"category":None},{'$set':{"category":"POP FEED"}})
+
+        yield popularItem

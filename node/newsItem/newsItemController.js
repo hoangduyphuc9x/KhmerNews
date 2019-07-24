@@ -11,35 +11,49 @@ var post_items = require('./newsItem').model('posts');
 // RETURNS ALL THE USERS IN THE DATABASE
 router.get('/api', function (req, res) {
     console.log(req.query);
-        post_items.find({magazine:req.query.magazine,category:req.query.category},(err,docs)=>{
-        if(err) return res.status(500).send("problem");
-        if(!docs) return res.status(404).send("no news found");
-        res.status(200).send(docs);
-    })
-});
+    if(req.query.article != null){
+        post_items.
+            find({_id:req.query.article}).
+            exec((err,result)=>{
+                if(err) return res.status(500).send("problem");
+                if(!result) return res.status(404).send("no news");
+                res.status(200).send(result);
+            })
+    }
+    else{
+        if(req.query.page == null){
+            req.query.page = 1
+        }
+        item_per_page = 20;
+            post_items.
+            find({category:req.query.category}).
+            sort({date:-1}).
+            skip(item_per_page*(req.query.page-1)).
+            limit(item_per_page).
+            exec((err,result)=>{
+                if(err) return res.status(500).send("problem");
+                if(!result) return res.status(404).send("no news");
+                res.status(200).send(result)
+            })
+        }
+    }
+);
 
-// router.get('/api/:magazine/:category',(req,res)=>{
-//     post_items.find({magazine:req.params.magazine,category:req.params.category},(err,docs)=>{
-//         if(err) return res.status(500).send("problem");
-//         if(!docs) return res.status(404).send("no news found");
-//         res.status(200).send(docs);
-//     })
-// })
-
-// router.get('/api/:magazine',(req,res)=>{
-//     post_items.find({magazine:req.params.magazine},(err,docs)=>{
-//         if(err) return res.status(500).send("problem");
-//         if(!docs) return res.status(404).send("no news found");
-//         res.status(200).send(docs);
-//     })
-// })
-
-// router.get('/api/:category',(req,res)=>{
-//     post_items.find({category:req.params.category},(err,docs)=>{
-//         if(err) return res.status(500).send("problem");
-//         if(!docs) return res.status(404).send("no news found");
-//         res.status(200).send(docs);
-//     })
-// })
+router.get('/api/home',(req,res)=>{
+    item_per_page = 20
+    console.log(req.query);
+    if(req.query.page == null){
+        req.query.page = 1
+    }
+    post_items.find({})
+        .sort({date:-1})
+        .skip(item_per_page*(req.query.page-1))
+        .limit(item_per_page)
+        .exec((err,result)=>{
+            if(err) return res.status(500).send("problem");
+            if(!result) return res.status(404).send("no news");
+            res.status(200).send(result)
+        })
+})
 
 module.exports = router;
