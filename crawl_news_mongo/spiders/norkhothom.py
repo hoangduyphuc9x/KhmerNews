@@ -38,7 +38,6 @@ class NorkhothomSpider(scrapy.Spider):
         urls = response.xpath('//div[@class="td-ss-main-content"]/div[@class="td-block-row"]/div/div/h3/a/@href').getall()
 
         for url in urls:
-            print(url)
             exist_url = False
             for x in col.find({"url":url}).limit(1):
                 exist_url = True
@@ -47,7 +46,6 @@ class NorkhothomSpider(scrapy.Spider):
                 linkTitle = response.urljoin(url)
                 yield scrapy.Request(url = linkTitle,callback=self.parse_content)
     def parse_content(self,response):
-            print(response.url)
             time_title = response.xpath('//div[@class="td-post-header"]/header')
             title = time_title.xpath('./h1/text()').get()
 
