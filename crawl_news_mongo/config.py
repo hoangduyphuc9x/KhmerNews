@@ -1,12 +1,13 @@
 def categoryProcess(category):
-
-    if ((category == "តារា&កម្សាន្ដ") or (category == "តារា") or (category == "កម្សាន្ត") or (category == "សិល្បៈកម្សាន្ត")):
+    if (category == "តារា&កម្សាន្ដ") or (category == "តារា") or (category == "កម្សាន្ត") or (
+            category == "សិល្បៈកម្សាន្ត"):
         return "Star & Entertainment"
     elif category == "សង្គម":
         return "Social"
     elif category == "ប្លែកៗ":
         return "Odd"
-    elif ((category == "សម្រស់&សុខភាព") or (category == "សុខភាព") or (category == "សម្រស់") or (category == "សម្រស់ និងសុខភាព")):
+    elif (category == "សម្រស់&សុខភាព") or (category == "សុខភាព") or (category == "សម្រស់") or (
+            category == "សម្រស់ និងសុខភាព"):
         return "Beautiful & Health"
     elif category == "យល់ដឹង":
         return "Knowledge"
@@ -16,11 +17,11 @@ def categoryProcess(category):
         return "Novel & Education"
     elif category == "ព័ត៌មានជាតិ":
         return "National News"
-    elif ((category == "អន្តរជាតិ") or (category == "ព័ត៌មានអន្តរជាតិ")):
+    elif (category == "អន្តរជាតិ") or (category == "ព័ត៌មានអន្តរជាតិ"):
         return "International"
     elif category == "នយោបាយ":
         return "Politics"
-    elif ((category == "សេដ្ឋកិច្ច & អចលនទ្រព្យ") or (category == "សេដ្ឋកិច្ច") or (category == "អចលនទ្រព្យ")):
+    elif (category == "សេដ្ឋកិច្ច & អចលនទ្រព្យ") or (category == "សេដ្ឋកិច្ច") or (category == "អចលនទ្រព្យ"):
         return "Economics & Real Estate"
     elif category == "ជីវប្រវត្តិឥស្សរជន":
         return "Elite biographies"
@@ -30,7 +31,7 @@ def categoryProcess(category):
         return "Describe"
     elif category == "តារាខ្មែរ":
         return "Khmer Artist"
-    elif ((category == "កីឡាអន្ដរជាតិ") or (category == "កីឡាជាតិ") or (category == "កីទ្បា") or (category == "កីឡា")):
+    elif (category == "កីឡាអន្ដរជាតិ") or (category == "កីឡាជាតិ") or (category == "កីទ្បា") or (category == "កីឡា"):
         return "Sport"
     elif category == "ជីវិត & ការងារ":
         return "Life & Work"
@@ -51,32 +52,34 @@ def categoryProcess(category):
     elif category == "POP FEED":
         return category
 
+
 def convert_month_to_int(month):
-    if((month == "Jan") or (month == "January")):
+    if (month == "Jan") or (month == "January"):
         int_month = 1
-    elif((month == "Feb") or (month == "February")):
+    elif (month == "Feb") or (month == "February"):
         int_month = 2
-    elif((month == "Mar") or (month == "March")):
+    elif (month == "Mar") or (month == "March"):
         int_month = 3
-    elif((month == "Apr") or (month == "April")):
+    elif (month == "Apr") or (month == "April"):
         int_month = 4
-    elif((month == "May")):
+    elif month == "May":
         int_month = 5
-    elif((month == "Jun") or (month == "June")):
+    elif (month == "Jun") or (month == "June"):
         int_month = 6
-    elif((month == "Jul") or (month == "July")):
+    elif (month == "Jul") or (month == "July"):
         int_month = 7
-    elif((month == "Aug") or (month == "August")):
+    elif (month == "Aug") or (month == "August"):
         int_month = 8
-    elif((month == "Sep") or (month == "September")):
+    elif (month == "Sep") or (month == "September"):
         int_month = 9
-    elif((month == "Oct") or (month == "October")):
+    elif (month == "Oct") or (month == "October"):
         int_month = 10
-    elif((month == "Nov") or (month == "November")):
+    elif (month == "Nov") or (month == "November"):
         int_month = 11
-    elif((month == "Dec") or (month == "December")):
+    elif (month == "Dec") or (month == "December"):
         int_month = 12
     return int_month
+
 
 # chuyen thanh False neu ra database chinh thuc
 def DebugMode():

@@ -2,7 +2,7 @@ import scrapy
 from ..items import NewsItem
 from datetime import datetime
 
-from ..common import categoryProcess,convert_month_to_int,DebugMode
+from ..config import categoryProcess,convert_month_to_int,DebugMode
 
 from pymongo import MongoClient
 

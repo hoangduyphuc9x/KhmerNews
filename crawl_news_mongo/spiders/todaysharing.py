@@ -4,7 +4,7 @@ from ..items import NewsItem
 
 from pymongo import MongoClient
 
-from ..common import categoryProcess,convert_month_to_int,DebugMode
+from ..config import categoryProcess,convert_month_to_int,DebugMode
 from datetime import datetime
 
 client = MongoClient('localhost',27017)
