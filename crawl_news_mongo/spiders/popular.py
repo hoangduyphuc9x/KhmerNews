@@ -41,9 +41,12 @@ class PopularSpider(scrapy.Spider, ABC):
 
     Cambodia_timezone = pytz.timezone('Asia/Phnom_Penh')
 
+    start_page_crawl = 1
+    end_page_crawl = 9
+
     def start_requests(self):
         for category in self.list_categories:
-            for page in range(1, 9):
+            for page in range(self.start_page_crawl, self.end_page_crawl):
                 category_list_page = category + "page/{}".format(page)
                 yield scrapy.Request(category_list_page, self.parse_category)
 
@@ -75,8 +78,6 @@ class PopularSpider(scrapy.Spider, ABC):
         day = int(date.split()[1].replace(",", ""))
 
         date_in_iso_format = datetime(year, month, day,tzinfo=self.Cambodia_timezone)
-        print("ISO FORMAT")
-        print(date_in_iso_format)
 
         popularItem = NewsItem()
 

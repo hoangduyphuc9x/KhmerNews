@@ -26,7 +26,7 @@ def categoryProcess(category):
     elif category == "ជីវប្រវត្តិឥស្សរជន":
         return "Elite biographies"
     elif category == "សន្តិសុខ និង សង្គម":
-        return "Security and society"
+        return "Security and Society"
     elif category == "បរិយាយ":
         return "Describe"
     elif category == "តារាខ្មែរ":
@@ -49,7 +49,11 @@ def categoryProcess(category):
         return "Lifestyle"
     elif category == "ព័ត៍មានទូទៅ":
         return "General Information"
+    elif category == "ព័ត៌មាន":
+        return "News"
     elif category == "POP FEED":
+        return category
+    else:
         return category
 
 
@@ -83,4 +87,9 @@ def convert_month_to_int(month):
 
 # chuyen thanh False neu ra database chinh thuc
 def DebugMode():
+    return False
+
+
+# True neu muon lay time bai bao = time crawl
+def get_DateTime_by_crawl_time():
     return False

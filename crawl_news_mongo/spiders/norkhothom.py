@@ -2,12 +2,11 @@ import scrapy
 from ..items import NewsItem
 from datetime import datetime
 import pytz
-from ..config import categoryProcess,convert_month_to_int,DebugMode
+from ..config import categoryProcess, convert_month_to_int, DebugMode
 
 from pymongo import MongoClient
 
-
-client = MongoClient('localhost',27017)
+client = MongoClient('localhost', 27017)
 
 if DebugMode() == True:
     db = client.TEST_DATABASE
@@ -15,6 +14,7 @@ if DebugMode() == True:
 else:
     db = client.OFFICIAL_DATABASE
     col = db["posts"]
+
 
 class NorkhothomSpider(scrapy.Spider):
     name = "Norkhothom"
@@ -34,44 +34,47 @@ class NorkhothomSpider(scrapy.Spider):
 
     def start_requests(self):
         for category in self.list_categories:
-            yield scrapy.Request(category,self.parse_category)
+            yield scrapy.Request(category, self.parse_category)
 
-    def parse_category(self,response):
-        urls = response.xpath('//div[@class="td-ss-main-content"]/div[@class="td-block-row"]/div/div/h3/a/@href').getall()
+    def parse_category(self, response):
+        urls = response.xpath(
+            '//div[@class="td-ss-main-content"]/div[@class="td-block-row"]/div/div/h3/a/@href').getall()
 
         for url in urls:
             exist_url = False
-            for x in col.find({"url":url}).limit(1):
+            for x in col.find({"url": url}).limit(1):
                 exist_url = True
                 break
-            if exist_url == False:
+            if not exist_url:
                 linkTitle = response.urljoin(url)
-                yield scrapy.Request(url = linkTitle,callback=self.parse_content)
-    def parse_content(self,response):
-            time_title = response.xpath('//div[@class="td-post-header"]/header')
-            title = time_title.xpath('./h1/text()').get()
+                yield scrapy.Request(url=linkTitle, callback=self.parse_content)
 
-            date = time_title.xpath('./div/span/time/text()').get()
+    def parse_content(self, response):
+        time_title = response.xpath('//div[@class="td-post-header"]/header')
+        title = time_title.xpath('./h1/text()').get()
 
-            year = int(date.split()[2])
-            month = convert_month_to_int(date.split()[0])
-            day = int(date.split()[1].replace(",",""))
+        date = time_title.xpath('./div/span/time/text()').get()
 
-            date_in_iso_format = datetime(year,month,day,tzinfo=self.Cambodia_timezone)
+        year = int(date.split()[2])
+        month = convert_month_to_int(date.split()[0])
+        day = int(date.split()[1].replace(",", ""))
 
-            category = categoryProcess(response.xpath('//ul[@class="td-category"]/li/a/text()').get().strip())
+        date_in_iso_format = datetime(year, month, day, tzinfo=self.Cambodia_timezone)
 
-            norItem = NewsItem()
 
-            norItem['magazine'] = "Norkhothom"
-            norItem['title'] = title
-            norItem['date'] = date_in_iso_format
-            norItem['category'] = category
-            norItem['url'] = response.url
-            # norItem['content'] = response.xpath('//div[@class="td-post-content"]').get()
+        category = categoryProcess(response.xpath('//ul[@class="td-category"]/li/a/text()').get().strip())
 
-            # col.find_one_and_update({'url':response.url},{'$set':{"category":category}})
+        norItem = NewsItem()
 
-            col.insert_one(norItem)
+        norItem['magazine'] = "Norkhothom"
+        norItem['title'] = title
+        norItem['date'] = date_in_iso_format
+        norItem['category'] = category
+        norItem['url'] = response.url
+        # norItem['content'] = response.xpath('//div[@class="td-post-content"]').get()
 
-            yield norItem
+        # col.find_one_and_update({'url':response.url},{'$set':{"category":category}})
+
+        col.insert_one(norItem)
+
+        yield norItem

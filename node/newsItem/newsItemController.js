@@ -56,4 +56,21 @@ router.get('/api/home',(req,res)=>{
         })
 })
 
+// router.get('/api/id',(req,res)=>{
+//     item_per_page = 20
+//     console.log(req.query);
+//     // if(req.query.id == null){
+//     //     req.query.id = 1
+//     // }
+//     post_items.find({_id})
+//         .sort({date:-1})
+//         .skip(item_per_page*(req.query.page-1))
+//         .limit(item_per_page)
+//         .exec((err,result)=>{
+//             if(err) return res.status(500).send("problem");
+//             if(!result) return res.status(404).send("no news");
+//             res.status(200).send(result)
+//         })
+// })
+
 module.exports = router;

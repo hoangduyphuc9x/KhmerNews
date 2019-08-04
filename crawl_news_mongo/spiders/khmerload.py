@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from scrapy.crawler import CrawlerProcess
 from ..items import NewsItem
-from ..config import categoryProcess, convert_month_to_int, DebugMode
+from ..config import categoryProcess, convert_month_to_int, DebugMode,get_DateTime_by_crawl_time
 
 from datetime import datetime
 import pytz
@@ -20,6 +19,7 @@ else:
 
 
 class KhmerLoadSpider(scrapy.Spider):
+
     name = "Khmerload"
 
     list_category = [
@@ -33,11 +33,14 @@ class KhmerLoadSpider(scrapy.Spider):
         'https://www.khmerload.com/category/knowledge'
     ]
 
+    start_crawl_page = 1
+    end_crawl_page = 9
+
     Cambodia_timezone = pytz.timezone('Asia/Phnom_Penh')
 
     def start_requests(self):
         for category in self.list_category:
-            for page in range(1, 9):
+            for page in range(self.start_crawl_page, self.end_crawl_page):
                 category_list_page = category + "?page={}".format(page)
                 print(category_list_page)
                 yield scrapy.Request(category_list_page, self.parse_test)
@@ -59,33 +62,26 @@ class KhmerLoadSpider(scrapy.Spider):
 
                 linkTitle = response.urljoin(title_link)
                 yield scrapy.Request(url=linkTitle, callback=self.parse_content, meta={'test': khmerloadItem})
-    #
+
     def parse_content(self, response):
 
         khmerloadItem = response.meta.get('test')
 
         title = response.xpath('//div[@class="article-header"]/h1//text()').get()
-        date_and_time = response.xpath('((//div[@class="article-header-meta"]/div)[2]/text())[4]').get().replace("\n",
-                                                                                                                 "").strip()
 
-        # parse thoi gian
-        year = int(date_and_time.split()[5])
-        month = convert_month_to_int(date_and_time.split()[3])
-        day = int(date_and_time.split()[4].replace(",", ""))
-
-        time = date_and_time.split()[2]
-
-        hour = int(time.split(":")[0])
-        minute = int(time.split(":")[1])
-
-        date_in_date_format = datetime(year, month, day, hour, minute,tzinfo=self.Cambodia_timezone)
+        if get_DateTime_by_crawl_time():
+            date_with_timezone = datetime.now().replace(tzinfo=self.Cambodia_timezone)
+        else:
+            date_and_time = response.xpath('((//div[@class="article-header-meta"]/div)[2]/text())[4]').get().replace("\n","").strip()
+            dateTime = date_and_time.split()[2]+" "+date_and_time.split()[3]+" "+date_and_time.split()[4]+" "+date_and_time.split()[5]
+            date_with_timezone = datetime.strptime(dateTime,"%H:%M %B %d, %Y").replace(tzinfo=self.Cambodia_timezone)
 
         # category tieng Anh
         category = categoryProcess(
             response.xpath('//li[@class="active"]/a/text()').get().replace("\n", "").replace(" ", "").strip())
 
         khmerloadItem['title'] = title
-        khmerloadItem['date'] = date_in_date_format
+        khmerloadItem['date'] = date_with_timezone
         khmerloadItem['category'] = category
         khmerloadItem['url'] = response.url
         khmerloadItem['content'] = response.xpath('//div[@class="article-content"]').get()
