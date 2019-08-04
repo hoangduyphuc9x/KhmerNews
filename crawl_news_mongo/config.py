@@ -87,7 +87,7 @@ def convert_month_to_int(month):
 
 # chuyen thanh False neu ra database chinh thuc
 def DebugMode():
-    return False
+    return True
 
 
 # True neu muon lay time bai bao = time crawl
