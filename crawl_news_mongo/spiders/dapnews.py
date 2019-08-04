@@ -9,6 +9,7 @@ from ..items import NewsItem
 from pymongo import MongoClient
 from ..config import categoryProcess, convert_month_to_int, DebugMode
 from datetime import datetime
+import pytz
 
 client = MongoClient('localhost', 27017)
 
@@ -35,6 +36,7 @@ class DapNewsSpider(scrapy.Spider, ABC):
         'https://www.dap-news.com/archives/category/entertainment',
         'https://www.dap-news.com/archives/category/health'
     ]
+    Cambodia_timezone = pytz.timezone('Asia/Phnom_Penh')
 
     page_start_to_crawl = 1
     page_end_to_crawl = 9
@@ -86,7 +88,7 @@ class DapNewsSpider(scrapy.Spider, ABC):
         hour = int(time.split(":")[0])
         minute = int(time.split(":")[1])
 
-        date_in_iso_format = datetime(year, month, day, hour, minute)
+        date_in_iso_format = datetime(year, month, day, hour, minute,tzinfo=self.Cambodia_timezone)
 
         # post_feat_img = ""
         if article.xpath('./div[@id="post-feat-img"]') is not None:

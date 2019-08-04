@@ -1,7 +1,7 @@
 import scrapy
 from ..items import NewsItem
 from datetime import datetime
-
+import pytz
 from ..config import categoryProcess,convert_month_to_int,DebugMode
 
 from pymongo import MongoClient
@@ -30,6 +30,8 @@ class NorkhothomSpider(scrapy.Spider):
         'https://norkorthom.com/category/report/'
     ]
 
+    Cambodia_timezone = pytz.timezone('Asia/Phnom_Penh')
+
     def start_requests(self):
         for category in self.list_categories:
             yield scrapy.Request(category,self.parse_category)
@@ -55,7 +57,7 @@ class NorkhothomSpider(scrapy.Spider):
             month = convert_month_to_int(date.split()[0])
             day = int(date.split()[1].replace(",",""))
 
-            date_in_iso_format = datetime(year,month,day)
+            date_in_iso_format = datetime(year,month,day,tzinfo=self.Cambodia_timezone)
 
             category = categoryProcess(response.xpath('//ul[@class="td-category"]/li/a/text()').get().strip())
 

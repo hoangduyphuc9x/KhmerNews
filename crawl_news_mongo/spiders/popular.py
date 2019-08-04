@@ -6,6 +6,7 @@ from abc import ABC
 import scrapy
 from ..items import NewsItem
 from datetime import datetime
+import pytz
 
 from pymongo import MongoClient
 
@@ -37,6 +38,8 @@ class PopularSpider(scrapy.Spider, ABC):
         'https://www.popular.com.kh/category/bii2019/',
         'https://www.popular.com.kh/category/dengte/'
     ]
+
+    Cambodia_timezone = pytz.timezone('Asia/Phnom_Penh')
 
     def start_requests(self):
         for category in self.list_categories:
@@ -71,7 +74,9 @@ class PopularSpider(scrapy.Spider, ABC):
         month = convert_month_to_int(date.split()[0])
         day = int(date.split()[1].replace(",", ""))
 
-        date_in_iso_format = datetime(year, month, day)
+        date_in_iso_format = datetime(year, month, day,tzinfo=self.Cambodia_timezone)
+        print("ISO FORMAT")
+        print(date_in_iso_format)
 
         popularItem = NewsItem()
 

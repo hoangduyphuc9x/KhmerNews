@@ -5,6 +5,7 @@ from ..items import NewsItem
 from ..config import categoryProcess, convert_month_to_int, DebugMode
 
 from datetime import datetime
+import pytz
 
 from pymongo import MongoClient
 
@@ -32,28 +33,14 @@ class KhmerLoadSpider(scrapy.Spider):
         'https://www.khmerload.com/category/knowledge'
     ]
 
+    Cambodia_timezone = pytz.timezone('Asia/Phnom_Penh')
+
     def start_requests(self):
         for category in self.list_category:
             for page in range(1, 9):
                 category_list_page = category + "?page={}".format(page)
                 print(category_list_page)
                 yield scrapy.Request(category_list_page, self.parse_test)
-
-    # def parse(self, response):
-    #     categories = response.xpath('//nav[@id="nav-main"]//li//a')
-    #     for category in categories:
-    #         LinkDest = response.urljoin(category.xpath('./@href').get())
-    #         yield scrapy.Request(url=LinkDest, callback=self.parse_category)
-
-    # def parse_category(self, response):
-    #
-    #     # homepage = response.xpath('//div[@class="homepage-zone-1"]')
-    #     # main_title_news = response.xpath('//div[class="homepage-zone-4"]')
-    #
-    #     list_pages = response.xpath('//ul[@class="pagination"]/li[position()<10]/a/@href').getall()
-    #
-    #     for list_page in list_pages:
-    #         yield response.follow(url=list_page, callback=self.parse_test)
 
     def parse_test(self, response):
         image_with_hrefs = response.xpath('//div[@class="container homepage-wrap"]//div[@class="media"]/a')
@@ -91,13 +78,12 @@ class KhmerLoadSpider(scrapy.Spider):
         hour = int(time.split(":")[0])
         minute = int(time.split(":")[1])
 
-        date_in_date_format = datetime(year, month, day, hour, minute)
+        date_in_date_format = datetime(year, month, day, hour, minute,tzinfo=self.Cambodia_timezone)
 
         # category tieng Anh
         category = categoryProcess(
             response.xpath('//li[@class="active"]/a/text()').get().replace("\n", "").replace(" ", "").strip())
 
-        khmerloadItem['magazine'] = "Khmerload"
         khmerloadItem['title'] = title
         khmerloadItem['date'] = date_in_date_format
         khmerloadItem['category'] = category
