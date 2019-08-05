@@ -84,9 +84,11 @@ class DapNewsSpider(scrapy.Spider, ABC):
             date_and_time = response.xpath('//time[@itemprop="datePublished"]/text()').get()
             date_with_timezone = datetime.strptime(date_and_time, "%d %B %Y | %H:%M").replace(tzinfo=self.Cambodia_timezone)
 
+        #Anh dau bai
         pre_image = response.xpath('//div[@id="post-feat-img"]/img').get()
         if(pre_image is not None):
             pre_image = "<center>" + pre_image + "</center>";
+
         content_pre = response.xpath('//div[@id="content-main"]/*[local-name()!="div" and local-name()!="style"]').getall()
         result_content = ""
         for content in content_pre:

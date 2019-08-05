@@ -15,13 +15,13 @@ from datetime import datetime
 #     print(tz)
 
 
-from datetime import datetime
+# from datetime import datetime
 # now = datetime.now() # current date and time
 # print(now)
 test = "July 15, 2019"
 previous = datetime.strptime(test,"%B %d, %Y")
 now = previous.replace(tzinfo=pytz.timezone('Asia/Phnom_Penh'))
-date_in_iso_format = datetime(2018, 11, 14,tzinfo=pytz.timezone('Asia/Phnom_Penh'))
+date_in_iso_format = datetime(2018, 11, 14,tzinfo=pytz.timezone('Asia/Ho_Chi_Minh'))
 
 print(type(now))
 print(now)

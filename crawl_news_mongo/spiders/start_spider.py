@@ -10,10 +10,10 @@ from .Khmernote import KhmernoteSpider
 from .kohsantepheapdaily import KohsantepheapdailySpider
 
 process = CrawlerProcess()
-# process.crawl(KhmerLoadSpider)
+process.crawl(KhmerLoadSpider)
 # process.crawl(PopularSpider)
 # process.crawl(TodaySharingSpider)
-process.crawl(DapNewsSpider)
+# process.crawl(DapNewsSpider)
 # process.crawl(NorkhothomSpider)
 # process.crawl(KohsantepheapdailySpider)
 # process.crawl(KhmernoteSpider)

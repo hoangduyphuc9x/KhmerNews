@@ -11,10 +11,10 @@ from pymongo import MongoClient
 client = MongoClient('localhost', 27017)
 
 if DebugMode():
-    db = client.TEST_DATABASE
+    db = client.TESTDB
     col = db["Khmerload"]
 else:
-    db = client.OFFICIAL_DATABASE
+    db = client.OFFDB
     col = db["posts"]
 
 
@@ -22,6 +22,8 @@ class KhmerLoadSpider(scrapy.Spider):
 
     name = "Khmerload"
 
+    #co cai nay nua :v Chia ra lam Khmer Star, Chinese Star,.........
+    # https://www.khmerload.com/interest/%E1%9E%8F%E1%9E%B6%E1%9E%9A%E1%9E%B6%E1%9E%81%E1%9F%92%E1%9E%98%E1%9F%82%E1%9E%9A
     list_category = [
         'https://www.khmerload.com/category/entertainment',
         'https://www.khmerload.com/category/social',
@@ -34,7 +36,7 @@ class KhmerLoadSpider(scrapy.Spider):
     ]
 
     start_crawl_page = 1
-    end_crawl_page = 9
+    end_crawl_page = 2
 
     Cambodia_timezone = pytz.timezone('Asia/Phnom_Penh')
 
@@ -43,29 +45,26 @@ class KhmerLoadSpider(scrapy.Spider):
             for page in range(self.start_crawl_page, self.end_crawl_page):
                 category_list_page = category + "?page={}".format(page)
                 print(category_list_page)
+                #o day cho quay vong duoc ko?
                 yield scrapy.Request(category_list_page, self.parse_test)
 
     def parse_test(self, response):
-        image_with_hrefs = response.xpath('//div[@class="container homepage-wrap"]//div[@class="media"]/a')
+        #Chon cac bai bao xuat hien
+        image_with_hrefs = response.xpath('//div[@class="column-idx-1"or@class="column-idx-2"or@class="column-idx-0"]//a[./img]')
         for image_with_href in image_with_hrefs:
-            title_link = 'https://www.khmerload.com' + image_with_href.xpath('./@href').get()
-            print(title_link)
-            exist_url = False
-            for x in col.find({"url": title_link}).limit(1):
-                exist_url = True
+            link_to_content = "https://www.khmerload.com"+image_with_href.xpath('./@href').get()
+            if(col.count_documents({"url":link_to_content},limit=1)!=0):
                 break
-            if not exist_url:
-                image_link = image_with_href.xpath('./img/@src').get()
+            else:
                 khmerloadItem = NewsItem()
                 khmerloadItem['magazine'] = "Khmerload"
-                khmerloadItem['img'] = image_link
-
-                linkTitle = response.urljoin(title_link)
-                yield scrapy.Request(url=linkTitle, callback=self.parse_content, meta={'test': khmerloadItem})
+                khmerloadItem['url'] = link_to_content
+                khmerloadItem['img'] = "https:" + image_with_href.xpath('./img/@src').get()
+                yield response.follow(link_to_content,callback=self.parse_content,meta={"khmerload":khmerloadItem})
 
     def parse_content(self, response):
 
-        khmerloadItem = response.meta.get('test')
+        khmerloadItem = response.meta.get('khmerload')
 
         title = response.xpath('//div[@class="article-header"]/h1//text()').get()
 
@@ -76,6 +75,16 @@ class KhmerLoadSpider(scrapy.Spider):
             dateTime = date_and_time.split()[2]+" "+date_and_time.split()[3]+" "+date_and_time.split()[4]+" "+date_and_time.split()[5]
             date_with_timezone = datetime.strptime(dateTime,"%H:%M %B %d, %Y").replace(tzinfo=self.Cambodia_timezone)
 
+        content = ("<html><head><style>img{max-width: 100%; width:auto; height: auto;}"+
+            "figcaption{color:gray;font-size:.8rem;padding-left:10px;text-align:center;}"+
+            "figure{margin:0,margin-top:1rem}"+
+            "p{font-size:1.2rem}"+"</style></head><body><div>")
+
+        content_raw = response.xpath('//div[@class="article-content"]/div[1]/*[local-name()="figure" or local-name()="p"]').getall()
+        for raw in content_raw:
+            content = content + raw
+        content = content + "</div></body></html>"
+
         # category tieng Anh
         category = categoryProcess(
             response.xpath('//li[@class="active"]/a/text()').get().replace("\n", "").replace(" ", "").strip())
@@ -84,7 +93,7 @@ class KhmerLoadSpider(scrapy.Spider):
         khmerloadItem['date'] = date_with_timezone
         khmerloadItem['category'] = category
         khmerloadItem['url'] = response.url
-        khmerloadItem['content'] = response.xpath('//div[@class="article-content"]').get()
+        khmerloadItem['content'] = content
 
         col.insert_one(khmerloadItem)
 
