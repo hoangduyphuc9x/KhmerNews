@@ -36,7 +36,7 @@ class KhmerLoadSpider(scrapy.Spider):
     ]
 
     start_crawl_page = 1
-    end_crawl_page = 2
+    end_crawl_page = 9
 
     Cambodia_timezone = pytz.timezone('Asia/Phnom_Penh')
 
