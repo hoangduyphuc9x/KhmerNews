@@ -1,2 +1,4 @@
 node_modules/
 node/node_modules
+crawl_news_mongo/.idea
+crawl_news_mongo/__pycache__
