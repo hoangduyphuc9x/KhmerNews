@@ -9,7 +9,8 @@ var NewsSchema = new mongoose.Schema({
   title:String,
   date:String,
   category:String,
-  url:String
+  url:String,
+  views:Number
 });
 
 mongoose.model('khmerload',NewsSchema,Khmerload_collection);

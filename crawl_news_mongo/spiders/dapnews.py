@@ -14,12 +14,11 @@ import pytz
 client = MongoClient('localhost', 27017)
 
 if DebugMode():
-    db = client.TEST_DATABASE
+    db = client.TESTDB
     col = db["Dap_news"]
 else:
-    db = client.OFFICIAL_DATABASE
+    db = client.OFFDB
     col = db["posts"]
-
 
 class DapNewsSpider(scrapy.Spider, ABC):
     name = 'dapnews'
@@ -52,11 +51,7 @@ class DapNewsSpider(scrapy.Spider, ABC):
         list_news_link = list_post.xpath('./a')
         for news_link in list_news_link:
             link_href = news_link.xpath('./@href').get()
-            exist_url = False
-            for x in col.find({"url": link_href}).limit(1):
-                exist_url = True
-                break
-            if not exist_url:
+            if(col.count_documents({"url":link_href},limit=1)==0):
                 list_image = news_link.xpath('.//img/@src').get()
 
                 dapNewsItem = NewsItem()
@@ -65,6 +60,7 @@ class DapNewsSpider(scrapy.Spider, ABC):
                 dapNewsItem['img'] = list_image
                 dapNewsItem['url'] = link_href
                 dapNewsItem['title'] = news_link.xpath('./@title').get()
+                dapNewsItem['views'] = 0
 
                 get_content_with_url = response.urljoin(link_href)
                 yield scrapy.Request(url=get_content_with_url, callback=self.parse_content,
@@ -73,9 +69,7 @@ class DapNewsSpider(scrapy.Spider, ABC):
     def parse_content(self, response):
 
         dapNewsItem = response.meta.get('dapNewsMeta')
-        article = response.xpath('//article[@id="post-area"]')
-
-        # category = categoryProcess(article.xpath('./header/a/span/text()').get().strip())
+        # article = response.xpath('//article[@id="post-area"]')
 
         category = categoryProcess(response.xpath('//header[@id="post-header"]//span/text()').get().strip())
         if get_DateTime_by_crawl_time():
@@ -84,22 +78,29 @@ class DapNewsSpider(scrapy.Spider, ABC):
             date_and_time = response.xpath('//time[@itemprop="datePublished"]/text()').get()
             date_with_timezone = datetime.strptime(date_and_time, "%d %B %Y | %H:%M").replace(tzinfo=self.Cambodia_timezone)
 
-        #Anh dau bai
-        pre_image = response.xpath('//div[@id="post-feat-img"]/img').get()
-        if(pre_image is not None):
-            pre_image = "<center>" + pre_image + "</center>";
+        # #Anh dau bai
+        # pre_image = response.xpath('//div[@id="post-feat-img"]/img').get()
+        # if(pre_image is not None):
+        #     pre_image = "<center>" + pre_image + "</center>";
 
-        content_pre = response.xpath('//div[@id="content-main"]/*[local-name()!="div" and local-name()!="style"]').getall()
-        result_content = ""
-        for content in content_pre:
-            result_content = result_content+content
-        if pre_image is not None:
-            result_content = pre_image + result_content
+        # content_pre = response.xpath('//div[@id="content-main"]/*[local-name()!="div" and local-name()!="style"]').getall()
+        # result_content = ""
+        # for content in content_pre:
+        #     result_content = result_content+content
+        # if pre_image is not None:
+        #     result_content = pre_image + result_content
+
+        list_img_content = []
+        content_img_raw = response.xpath('//div[@id="content-main"]/p//img')
+        for img_content in content_img_raw:
+            img_src = img_content.xpath('./@src').get()
+            if(img_src is not None and len(list_img_content) <= 2):
+                list_img_content.append(img_src)
+
+        dapNewsItem['content_img'] = list_img_content
 
         dapNewsItem['date'] = date_with_timezone
         dapNewsItem['category'] = category
-        dapNewsItem['content'] = result_content
 
-        # col.find_one_and_update({'url':response.url},{'$set':{"date":date,"time":time,"category":category}})
         col.insert_one(dapNewsItem)
         yield dapNewsItem

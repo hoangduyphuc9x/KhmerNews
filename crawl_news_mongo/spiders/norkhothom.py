@@ -8,11 +8,11 @@ from pymongo import MongoClient
 
 client = MongoClient('localhost', 27017)
 
-if DebugMode() == True:
-    db = client.TEST_DATABASE
+if DebugMode():
+    db = client.TESTDB
     col = db["Norkhothom"]
 else:
-    db = client.OFFICIAL_DATABASE
+    db = client.OFFDB
     col = db["posts"]
 
 
@@ -41,13 +41,12 @@ class NorkhothomSpider(scrapy.Spider):
             '//div[@class="td-ss-main-content"]/div[@class="td-block-row"]/div/div/h3/a/@href').getall()
 
         for url in urls:
-            exist_url = False
-            for x in col.find({"url": url}).limit(1):
-                exist_url = True
-                break
-            if not exist_url:
+            if(col.count_documents({"url":url},limit=1)==0):
+                img_src = response.xpath('//div[@class="td-module-image"]//img/@src').get()
+                norItem = NewsItem()
+                norItem['img'] = img_src
                 linkTitle = response.urljoin(url)
-                yield scrapy.Request(url=linkTitle, callback=self.parse_content)
+                yield scrapy.Request(url=linkTitle, callback=self.parse_content, meta={"norItem":norItem})
 
     def parse_content(self, response):
         time_title = response.xpath('//div[@class="td-post-header"]/header')
@@ -61,16 +60,28 @@ class NorkhothomSpider(scrapy.Spider):
 
         date_in_iso_format = datetime(year, month, day, tzinfo=self.Cambodia_timezone)
 
-
         category = categoryProcess(response.xpath('//ul[@class="td-category"]/li/a/text()').get().strip())
 
-        norItem = NewsItem()
+        img_content_list = []
+        img_content = response.xpath('//div[@class="td-post-content"]//img')
+        for img in img_content:
+            src_img = img.xpath('./@src').get()
+            if(src_img is not None and len(img_content_list)<=2):
+                img_content_list.append(src_img)
+
+        norItem = response.meta.get("norItem")
+
+        if(norItem['img'] is None):
+            if(len(img_content_list)>0):
+                norItem['img'] = img_content_list[0]
 
         norItem['magazine'] = "Norkhothom"
         norItem['title'] = title
         norItem['date'] = date_in_iso_format
         norItem['category'] = category
         norItem['url'] = response.url
+        norItem['content_img'] = img_content_list
+        norItem['views'] = 0
         # norItem['content'] = response.xpath('//div[@class="td-post-content"]').get()
 
         # col.find_one_and_update({'url':response.url},{'$set':{"category":category}})

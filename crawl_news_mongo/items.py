@@ -18,3 +18,15 @@ class NewsItem(scrapy.Item):
     category = scrapy.Field()
     description = scrapy.Field()
     img = scrapy.Field()
+    content_img = scrapy.Field()
+    views = scrapy.Field()
+
+class VideoItem(scrapy.Item):
+    _id=scrapy.Field()
+    title = scrapy.Field()
+    url = scrapy.Field()
+    magazine = scrapy.Field()
+    date = scrapy.Field()
+    category = scrapy.Field()
+    iframe_src = scrapy.Field()
+    description = scrapy.Field()

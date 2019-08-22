@@ -10,10 +10,10 @@ from datetime import datetime
 client = MongoClient('localhost', 27017)
 
 if DebugMode() == True:
-    db = client.TEST_DATABASE
+    db = client.TESTDB
     col = db["TodaySharing"]
 else:
-    db = client.OFFICIAL_DATABASE
+    db = client.OFFDB
     col = db["posts"]
 
 
@@ -44,14 +44,14 @@ class TodaySharingSpider(scrapy.Spider):
         links = response.xpath(
             '//div[@class="listing listing-blog listing-blog-5 clearfix "]/article/div/h2/a/@href').getall()
         for link in links:
-            exist_url = False
-            for x in col.find({"url": link}).limit(1):
-                exist_url = True
-                break
-            if not exist_url:
-                yield scrapy.Request(url=response.urljoin(link), callback=self.parse_content)
+            if(col.count_documents({"url":link},limit=1)==0):
+                todaySharingItem = NewsItem()
+                todaySharingItem['img'] = response.xpath('//div[@class="listing listing-blog listing-blog-5 clearfix "]/article/div//div[@class="featured clearfix"]/a/@data-src').get()
+                yield scrapy.Request(url=response.urljoin(link), callback=self.parse_content,meta={"todaySharing":todaySharingItem})
 
     def parse_content(self, response):
+
+        todaySharingItem = response.meta.get("todaySharing")
 
         title = response.xpath('//article//h1/span/text()').get()
         date = response.xpath('//article//time/b/text()').get()
@@ -66,7 +66,18 @@ class TodaySharingSpider(scrapy.Spider):
             response.xpath('//ul[@class="bf-breadcrumb-items"]/li[2]/a/span/text()').get().replace("\n", "").replace(
                 "\t", "").strip())
 
-        todaySharingItem = NewsItem()
+        list_content_img = []
+        list_img_src = response.xpath('//div[contains(@class,"single-post-content")]/*[local-name()!="div"]//img')
+        for img in list_img_src:
+            if(len(list_content_img) <= 2):
+                if(img.xpath('./@src').get() is not None):
+                    list_content_img.append(img.xpath('./@src').get())
+                elif(img.xpath('./@data-src').get() is not None):
+                    list_content_img.append(img.xpath('./@data-src').get())
+
+        if(todaySharingItem['img'] is None):
+            if(len(list_content_img) > 0):
+                todaySharingItem['img'] = list_content_img[0]
 
         todaySharingItem['magazine'] = "TodaySharing"
         todaySharingItem['title'] = title
@@ -74,6 +85,8 @@ class TodaySharingSpider(scrapy.Spider):
         todaySharingItem['url'] = response.url
         # todaySharingItem['content'] = content
         todaySharingItem['category'] = category
+        todaySharingItem['content_img'] = list_content_img
+        todaySharingItem['views'] = 0
 
         col.insert_one(todaySharingItem)
 

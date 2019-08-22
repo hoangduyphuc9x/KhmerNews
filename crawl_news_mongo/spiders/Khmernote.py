@@ -12,10 +12,10 @@ from pymongo import MongoClient
 client = MongoClient('localhost', 27017)
 
 if DebugMode():
-    db = client.TEST_DATABASE
+    db = client.TESTDB
     col = db["Khmernote"]
 else:
-    db = client.OFFICIAL_DATABASE
+    db = client.OFFDB
     col = db["posts"]
 
 
@@ -52,26 +52,17 @@ class KhmernoteSpider(scrapy.Spider, ABC):
         image_list = response.xpath('//section[@id="category"]//div[@class="category__block__listsPic"]/a')
         for image in image_list:
             image_href = image.xpath('./@href').get()
-            print("imageHREF", image_href)
-            exist_url = False
-            for x in col.find({"url": image_href}).limit(1):
-                exist_url = True
-                break
-            if not exist_url:
+            if(col.count_documents({"url":image_href},limit=1) == 0):
                 KhmernoteItem = NewsItem()
+
                 KhmernoteItem['magazine'] = "Khmernote"
                 KhmernoteItem['img'] = image.xpath('./img/@data-src').get()
+
                 yield scrapy.Request(url=response.urljoin(image_href), callback=self.parse_content,
                                      meta={'Khmernote': KhmernoteItem})
 
     def parse_content(self, response):
         category = categoryProcess(response.xpath('//span[@class="single__content--cmnTag"]//text()').get().strip())
-
-        # for cambodia_category in self.list_category_cambodia:
-        #     if category == cambodia_category:
-        #         break
-        #     else:
-        #         self.list_category_cambodia.append(category)
 
         if get_DateTime_by_crawl_time():
             date_with_timezone = datetime.now().replace(tzinfo=self.Cambodia_timezone)
@@ -79,18 +70,34 @@ class KhmernoteSpider(scrapy.Spider, ABC):
             date = response.xpath('//span[@class="single__content--cmnDate"]//text()').get()
             date_with_timezone = datetime.strptime(date, "%B %d, %Y").replace(tzinfo=self.Cambodia_timezone)
         title = response.xpath('//div[@class="single__contentTitle"]//text()').get().strip()
-        content = response.xpath('//div[@class="single__contentDetail"]').get()
+
+        # content = response.xpath('//div[@class="single__contentDetail"]').get()
 
         KhmernoteItem = response.meta.get('Khmernote')
 
+        # Tat cai JAVASCRIPT di ma test, dm
+        # Lay srcset hoac data-src nhe
+        # # list_img_content = []
+
+        # # content_img_raw = response.xpath('//div[@class="single__contentDetail"]/*/img/@src')
+        # content_img_in_div = response.xpath('//div[@class="single__contentDetail"]/img/@data-src')
+        # # f.write(content_img_in_div.getall())
+        # for img_in_div in content_img_in_div:
+        #     f.write(img_in_div.get())
+        #     # if(len(list_img_content) <= 2):
+        #     list_img_content.append(img_in_div.xpath('@src').get())
+        # # for img_raw in content_img_raw:
+        # #     if(img_raw.get() is not None and len(list_img_content) <= 2):
+        # #         list_img_content.append(img_raw.get())
+
         KhmernoteItem['category'] = category
         KhmernoteItem['title'] = title
-        KhmernoteItem['content'] = content
         KhmernoteItem['date'] = date_with_timezone
         KhmernoteItem['url'] = response.url
+        KhmernoteItem['views'] = 0
+        KhmernoteItem['content_img'] = []
+        # KhmernoteItem['content_img'] = list_img_content
+        # KhmernoteItem['content'] = content
 
         col.insert_one(KhmernoteItem)
         yield KhmernoteItem
-
-    # print("listCategories", list_category_cambodia)
-

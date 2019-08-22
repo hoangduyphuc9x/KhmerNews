@@ -44,7 +44,6 @@ class KhmerLoadSpider(scrapy.Spider):
         for category in self.list_category:
             for page in range(self.start_crawl_page, self.end_crawl_page):
                 category_list_page = category + "?page={}".format(page)
-                print(category_list_page)
                 #o day cho quay vong duoc ko?
                 yield scrapy.Request(category_list_page, self.parse_test)
 
@@ -53,9 +52,7 @@ class KhmerLoadSpider(scrapy.Spider):
         image_with_hrefs = response.xpath('//div[@class="column-idx-1"or@class="column-idx-2"or@class="column-idx-0"]//a[./img]')
         for image_with_href in image_with_hrefs:
             link_to_content = "https://www.khmerload.com"+image_with_href.xpath('./@href').get()
-            if(col.count_documents({"url":link_to_content},limit=1)!=0):
-                break
-            else:
+            if(col.count_documents({"url":link_to_content},limit=1)==0):
                 khmerloadItem = NewsItem()
                 khmerloadItem['magazine'] = "Khmerload"
                 khmerloadItem['url'] = link_to_content
@@ -75,15 +72,20 @@ class KhmerLoadSpider(scrapy.Spider):
             dateTime = date_and_time.split()[2]+" "+date_and_time.split()[3]+" "+date_and_time.split()[4]+" "+date_and_time.split()[5]
             date_with_timezone = datetime.strptime(dateTime,"%H:%M %B %d, %Y").replace(tzinfo=self.Cambodia_timezone)
 
-        content = ("<html><head><style>img{max-width: 100%; width:auto; height: auto;}"+
-            "figcaption{color:gray;font-size:.8rem;padding-left:10px;text-align:center;}"+
-            "figure{margin:0,margin-top:1rem}"+
-            "p{font-size:1.2rem}"+"</style></head><body><div>")
+        list_img_content = []
 
-        content_raw = response.xpath('//div[@class="article-content"]/div[1]/*[local-name()="figure" or local-name()="p"]').getall()
+        # content = ("<html><head><style>img{min-width:100%; max-width: 100%; width:auto; height: auto;}"+
+        #     "figcaption{color:gray;font-size:.8rem;padding-left:10px;text-align:center;}"+
+        #     "figure{margin:0;margin-top:1rem}"+
+        #     "p{font-size:1.2rem}"+"</style></head><body><div>")
+
+        content_raw = response.xpath('//div[@class="article-content"]/div[1]/*[local-name()="figure" or local-name()="p"]')
         for raw in content_raw:
-            content = content + raw
-        content = content + "</div></body></html>"
+            # content = content + raw.get()
+            img_link = raw.xpath('.//img/@src').get()
+            if(img_link is not None and len(list_img_content) <= 2):
+                list_img_content.append(img_link)
+        # content = content + "</div></body></html>"
 
         # category tieng Anh
         category = categoryProcess(
@@ -92,8 +94,9 @@ class KhmerLoadSpider(scrapy.Spider):
         khmerloadItem['title'] = title
         khmerloadItem['date'] = date_with_timezone
         khmerloadItem['category'] = category
-        khmerloadItem['url'] = response.url
-        khmerloadItem['content'] = content
+        khmerloadItem['views'] = 0
+        # khmerloadItem['content'] = content
+        khmerloadItem['content_img'] = list_img_content
 
         col.insert_one(khmerloadItem)
 

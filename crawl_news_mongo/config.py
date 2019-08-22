@@ -1,20 +1,22 @@
 def categoryProcess(category):
     if (category == "តារា&កម្សាន្ដ") or (category == "តារា") or (category == "កម្សាន្ត") or (
             category == "សិល្បៈកម្សាន្ត"):
-        return "Star & Entertainment"
-    elif category == "សង្គម":
-        return "Social"
+        return "Star_and_Entertainment"
+    elif (category == "សង្គម") or (category == "សន្តិសុខ និង សង្គម"):
+        return "Security_and_Society"
     elif category == "ប្លែកៗ":
-        return "Odd"
+        return "Strange"
     elif (category == "សម្រស់&សុខភាព") or (category == "សុខភាព") or (category == "សម្រស់") or (
             category == "សម្រស់ និងសុខភាព"):
-        return "Beautiful & Health"
+        return "Beautiful_and_Health"
     elif category == "យល់ដឹង":
         return "Knowledge"
+    elif category == "ពីនេះពីនោះ":
+        return "From_there"
     elif category == "បច្ចេកវិទ្យា":
         return "Technology"
     elif category == "ប្រលោមលោក&អប់រំ":
-        return "Novel & Education"
+        return "Novels_and_Education"
     elif category == "ព័ត៌មានជាតិ":
         return "National News"
     elif (category == "អន្តរជាតិ") or (category == "ព័ត៌មានអន្តរជាតិ"):
@@ -22,37 +24,37 @@ def categoryProcess(category):
     elif category == "នយោបាយ":
         return "Politics"
     elif (category == "សេដ្ឋកិច្ច & អចលនទ្រព្យ") or (category == "សេដ្ឋកិច្ច") or (category == "អចលនទ្រព្យ"):
-        return "Economics & Real Estate"
+        return "Economics_and_Real Estate"
     elif category == "ជីវប្រវត្តិឥស្សរជន":
-        return "Elite biographies"
-    elif category == "សន្តិសុខ និង សង្គម":
-        return "Security and Society"
+        return "Elite_biographies"
     elif category == "បរិយាយ":
         return "Describe"
     elif category == "តារាខ្មែរ":
-        return "Khmer Artist"
+        return "Khmer_Artist"
     elif (category == "កីឡាអន្ដរជាតិ") or (category == "កីឡាជាតិ") or (category == "កីទ្បា") or (category == "កីឡា"):
         return "Sport"
     elif category == "ជីវិត & ការងារ":
-        return "Life & Work"
+        return "Life_and_Work"
     elif category == "ស្នេហាស្នេហ៍ហឺត":
         return "Love"
     elif category == "ទេសចរណ៍":
         return "Tours"
     elif category == "ចរាចរណ៍ថ្ងៃនេះ":
-        return "Traffic Today"
+        return "Traffic_Today"
     elif category == "បាក់ឌុប២០១៩":
-        return "Creative Arts and Design 2019"
+        return "Creative_Arts_and_Design_2019"
     elif category == "ឃ្លាំងគំនិត":
-        return "Mindset repository"
+        return "Mindset_repository"
     elif category == "បែបផែនជីវិត":
         return "Lifestyle"
-    elif category == "ព័ត៍មានទូទៅ":
-        return "General Information"
+    elif (category == "ព័ត៍មានទូទៅ") or (category == "ទូទៅ"):
+        return "General_Information"
     elif category == "ព័ត៌មាន":
         return "News"
-    elif category == "POP FEED":
+    elif category == "POP_FEED":
         return category
+    elif category == "ដឹងទេ":
+        return "You_know"
     else:
         return category
 

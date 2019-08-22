@@ -15,10 +15,10 @@ from ..config import categoryProcess, convert_month_to_int, DebugMode
 client = MongoClient('localhost', 27017)
 
 if DebugMode():
-    db = client.TEST_DATABASE
+    db = client.TESTDB
     col = db["Popular"]
 else:
-    db = client.OFFICIAL_DATABASE
+    db = client.OFFDB
     col = db["posts"]
 
 
@@ -51,25 +51,23 @@ class PopularSpider(scrapy.Spider, ABC):
                 yield scrapy.Request(category_list_page, self.parse_category)
 
     def parse_category(self, response):
-
-        urls = response.xpath('//ul[@class="mvp-blog-story-list left relative infinite-content"]/li/a/@href').getall()
-        for url in urls:
-            exist_url = False
-            for x in col.find({"url": url}).limit(1):
-                exist_url = True
-                break
-            if not exist_url:
-                print(response.url)
-                linkUrl = response.urljoin(url)
-                yield scrapy.Request(url=linkUrl, callback=self.parse_content)
+        a_tags_with_href_and_image = response.xpath('//li/a[.//img]')
+        for a_tag in a_tags_with_href_and_image:
+            if(col.count_documents({"url":a_tag.xpath('./@href').get()},limit = 1)==0):
+                url_to_content = a_tag.xpath('./@href').get()
+                popularItem = NewsItem()
+                popularItem['magazine'] = "Popular"
+                popularItem['url'] = url_to_content
+                popularItem['img'] = a_tag.xpath('.//img[1]/@src').get()
+                popularItem['views'] = 0
+                yield response.follow(url_to_content,callback=self.parse_content,meta={"popular":popularItem})
 
     def parse_content(self, response):
-        # print("parse content " + response.url)
+        popularItem = response.meta.get('popular')
+
         title = response.xpath('//header[@id="mvp-post-head"]/h1/text()').get()
-        if title is None:
-            print("NONE!!!!!")
-        category = categoryProcess(response.xpath('//header[@id="mvp-post-head"]/h3[@class="mvp-post-cat left '
-                                                  'relative"]/a/span/text()').get().strip())
+
+        category = categoryProcess(response.xpath('//header[@id="mvp-post-head"]/h3//span/text()').get().strip())
 
         date = response.xpath('//time[@class="post-date updated"]/text()').get()
 
@@ -79,20 +77,51 @@ class PopularSpider(scrapy.Spider, ABC):
 
         date_in_iso_format = datetime(year, month, day,tzinfo=self.Cambodia_timezone)
 
-        popularItem = NewsItem()
+        # #-------------------CONTENT-------------------
+        # #css, style,....
+        # css_head_html = ("<html><head><style>img{max-width: 100%; width:auto; height: auto;margin:0}\n"+
+        #     "iframe{width:100%; height:100%;}</style></head><body>")
+        # # Lay src anh va video duoc nhung o dau bai
+        # pre_image_and_video = ""
+        # video_and_image_embed = response.xpath('//div[@id="mvp-video-embed" or @id="mvp-post-feat-img"]//*[local-name() = ("iframe" or "img")][1]')
+        # for ifr in video_and_image_embed:
+        #     if(ifr.xpath('name()').get() == 'iframe'):
+        #         pre_image_and_video = pre_image_and_video + "<iframe src=\"" +  ifr.xpath('./@src').get() + "\"></iframe>\n"
+        #     else:
+        #         pre_image_and_video = pre_image_and_video + "<img src= \"" +  ifr.xpath('./@src').get() + "\"></img>\n"
+        # content = css_head_html + pre_image_and_video
+        # content_list_with_p_tag = response.xpath('//div[@id="mvp-content-main"]/p').getall()
+        # for p_tag in content_list_with_p_tag:
+        #     content = content + p_tag
+        # content = content + "</body></html>"
+        # #---------------------END CONTENT-----------------
 
-        popularItem['magazine'] = "Popular"
+        # #------------------------IMAGE-CONTENT-----------------------
+        list_img_content = []
+
+        prelude_images = response.xpath('//div[@id="mvp-post-feat-img"]//img/@src')
+        for pre_image in prelude_images:
+            if(pre_image.get() is not None and len(list_img_content) <= 2):
+                list_img_content.append(pre_image.get())
+                
+        content_images_src = response.xpath('//div[@id="mvp-content-main"]//img/@src')
+        for images_src in content_images_src:
+            if(images_src.get() is not None and len(list_img_content) <= 2):
+                list_img_content.append(images_src.get())
+        
+        # #--------------------------END-IMAGE-CONTENT---------------------------
+ 
         popularItem['title'] = title
         popularItem['date'] = date_in_iso_format
         popularItem['category'] = category
-        popularItem['url'] = response.url
-        popularItem['content'] = response.xpath('//div[@id="mvp-content-main"]').get()
+        popularItem['content_img'] = list_img_content
+
+        # popularItem['content'] = content
 
         # anh nay to, co the load bi cham!!!!!!!!!!!!
-        popularItem['img'] = response.xpath('//div[@id="mvp-post-feat-img"]/img/@src').get()
-
-        col.insert_one(popularItem)
+        # popularItem['img'] = response.xpath('//div[@id="mvp-post-feat-img"]/img/@src').get()
 
         # # col.find_one_and_update({"category":None},{'$set':{"category":"POP FEED"}})
 
+        col.insert_one(popularItem)
         yield popularItem
